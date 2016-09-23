@@ -2305,20 +2305,34 @@ public class AlterTableIT extends BaseOwnClusterHBaseManagedTimeIT {
             // assert that the client side cache is updated.
             baseTable = phxConn.getTable(new PTableKey(phxConn.getTenantId(), fullTableName));
             EncodedCQCounter encodedCqCounter = baseTable.getEncodedCQCounter();
-            assertEquals((Integer)(ENCODED_CQ_COUNTER_INITIAL_VALUE + 3), encodedCqCounter.getValue(DEFAULT_COLUMN_FAMILY));
+            assertEquals((Integer)(ENCODED_CQ_COUNTER_INITIAL_VALUE + 2), encodedCqCounter.getValue(DEFAULT_COLUMN_FAMILY));
+            assertEquals((Integer)(ENCODED_CQ_COUNTER_INITIAL_VALUE + 1), encodedCqCounter.getValue("B"));
             
             // assert that the server side metadata is updated correctly.
-            assertEncodedCQCounter(DEFAULT_COLUMN_FAMILY, schemaName, baseTableName, ENCODED_CQ_COUNTER_INITIAL_VALUE + 3, true);
+            assertEncodedCQCounter(DEFAULT_COLUMN_FAMILY, schemaName, baseTableName, ENCODED_CQ_COUNTER_INITIAL_VALUE + 2, true);
+            assertEncodedCQCounter("B", schemaName, baseTableName, ENCODED_CQ_COUNTER_INITIAL_VALUE + 1, true);
+            
+            // assert that the server side metadata for columns is updated correctly.
             assertEncodedCQValue(DEFAULT_COLUMN_FAMILY, "COL4", schemaName, baseTableName, ENCODED_CQ_COUNTER_INITIAL_VALUE);
             assertEncodedCQValue(DEFAULT_COLUMN_FAMILY, "COL5", schemaName, baseTableName, ENCODED_CQ_COUNTER_INITIAL_VALUE + 1);
-            assertEncodedCQValue("B", "COL6", schemaName, baseTableName, ENCODED_CQ_COUNTER_INITIAL_VALUE + 2);
+            assertEncodedCQValue("B", "COL6", schemaName, baseTableName, ENCODED_CQ_COUNTER_INITIAL_VALUE);
             assertSequenceNumber(schemaName, baseTableName, initBaseTableSeqNumber + 1);
 
             // Create a view
             String viewDDL = "CREATE VIEW " + fullViewName + " ( VIEW_COL1 INTEGER, A.VIEW_COL2 VARCHAR ) AS SELECT * FROM " + fullTableName;
             conn.createStatement().execute(viewDDL);
+            
+            // assert that the server side metadata is updated correctly.
+            assertEncodedCQCounter(DEFAULT_COLUMN_FAMILY, schemaName, baseTableName, ENCODED_CQ_COUNTER_INITIAL_VALUE + 3, true);
+            assertEncodedCQCounter("A", schemaName, baseTableName, ENCODED_CQ_COUNTER_INITIAL_VALUE + 1, true);
+            assertEncodedCQCounter("B", schemaName, baseTableName, ENCODED_CQ_COUNTER_INITIAL_VALUE + 1, true);
+            
+            // assert that the server side metadata for columns is updated correctly.
+            assertEncodedCQValue(DEFAULT_COLUMN_FAMILY, "VIEW_COL1", schemaName, viewName, ENCODED_CQ_COUNTER_INITIAL_VALUE + 2);
+            assertEncodedCQValue("A", "VIEW_COL2", schemaName, viewName, ENCODED_CQ_COUNTER_INITIAL_VALUE);
             // Creating a view that adds its own columns should increment the base table's sequence number too.
             assertSequenceNumber(schemaName, baseTableName, initBaseTableSeqNumber + 2);
+            
 
             // Add column to the view
             viewDDL = "ALTER VIEW " + fullViewName + " ADD VIEW_COL3 DECIMAL(10, 2), A.VIEW_COL4 VARCHAR, B.VIEW_COL5 INTEGER";
@@ -2327,7 +2341,9 @@ public class AlterTableIT extends BaseOwnClusterHBaseManagedTimeIT {
             // assert that the client cache for the base table is updated
             baseTable = phxConn.getTable(new PTableKey(phxConn.getTenantId(), fullTableName));
             encodedCqCounter = baseTable.getEncodedCQCounter();
-            assertEquals((Integer)(ENCODED_CQ_COUNTER_INITIAL_VALUE + 8), encodedCqCounter.getValue(DEFAULT_COLUMN_FAMILY));
+            assertEquals((Integer)(ENCODED_CQ_COUNTER_INITIAL_VALUE + 4), encodedCqCounter.getValue(DEFAULT_COLUMN_FAMILY));
+            assertEquals((Integer)(ENCODED_CQ_COUNTER_INITIAL_VALUE + 2), encodedCqCounter.getValue("A"));
+            assertEquals((Integer)(ENCODED_CQ_COUNTER_INITIAL_VALUE + 2), encodedCqCounter.getValue("B"));
             
             // assert client cache for view
             PTable view = phxConn.getTable(new PTableKey(phxConn.getTenantId(), fullViewName));
@@ -2335,10 +2351,14 @@ public class AlterTableIT extends BaseOwnClusterHBaseManagedTimeIT {
             assertNull("A view should always have the column qualifier counter as null", view.getEncodedCQCounter().getValue(DEFAULT_COLUMN_FAMILY));
             
             // assert that the server side metadata for the base table and the view is also updated correctly.
-            assertEncodedCQCounter(DEFAULT_COLUMN_FAMILY, schemaName, baseTableName, ENCODED_CQ_COUNTER_INITIAL_VALUE + 8, true);
-            assertEncodedCQValue(DEFAULT_COLUMN_FAMILY, "VIEW_COL3", schemaName, viewName, ENCODED_CQ_COUNTER_INITIAL_VALUE + 5);
-            assertEncodedCQValue("A", "VIEW_COL4", schemaName, viewName, ENCODED_CQ_COUNTER_INITIAL_VALUE + 6);
-            assertEncodedCQValue("B", "VIEW_COL5", schemaName, viewName, ENCODED_CQ_COUNTER_INITIAL_VALUE + 7);
+            assertEncodedCQCounter(DEFAULT_COLUMN_FAMILY, schemaName, baseTableName, ENCODED_CQ_COUNTER_INITIAL_VALUE + 4, true);
+            assertEncodedCQCounter("A", schemaName, baseTableName, ENCODED_CQ_COUNTER_INITIAL_VALUE + 2, true);
+            assertEncodedCQCounter("B", schemaName, baseTableName, ENCODED_CQ_COUNTER_INITIAL_VALUE + 2, true);
+            assertEncodedCQValue(DEFAULT_COLUMN_FAMILY, "VIEW_COL1", schemaName, viewName, ENCODED_CQ_COUNTER_INITIAL_VALUE + 2);
+            assertEncodedCQValue(DEFAULT_COLUMN_FAMILY, "VIEW_COL3", schemaName, viewName, ENCODED_CQ_COUNTER_INITIAL_VALUE + 3);
+            assertEncodedCQValue("A", "VIEW_COL2", schemaName, viewName, ENCODED_CQ_COUNTER_INITIAL_VALUE);
+            assertEncodedCQValue("A", "VIEW_COL4", schemaName, viewName, ENCODED_CQ_COUNTER_INITIAL_VALUE + 1);
+            assertEncodedCQValue("B", "VIEW_COL5", schemaName, viewName, ENCODED_CQ_COUNTER_INITIAL_VALUE + 1);
             // Adding a column to the should increment the base table's sequence number too since we update the cq counters for column families.
             assertSequenceNumber(schemaName, baseTableName, initBaseTableSeqNumber + 3);
             assertSequenceNumber(schemaName, viewName, PTable.INITIAL_SEQ_NUM + 1);
@@ -2350,7 +2370,9 @@ public class AlterTableIT extends BaseOwnClusterHBaseManagedTimeIT {
             
             // assert that the client cache for the base table is updated 
             encodedCqCounter = baseTable.getEncodedCQCounter();
-            assertEquals((Integer)(ENCODED_CQ_COUNTER_INITIAL_VALUE + 10), encodedCqCounter.getValue(DEFAULT_COLUMN_FAMILY));
+            assertEquals((Integer)(ENCODED_CQ_COUNTER_INITIAL_VALUE + 5), encodedCqCounter.getValue(DEFAULT_COLUMN_FAMILY));
+            assertEquals((Integer)(ENCODED_CQ_COUNTER_INITIAL_VALUE + 3), encodedCqCounter.getValue("A"));
+            assertEquals((Integer)(ENCODED_CQ_COUNTER_INITIAL_VALUE + 2), encodedCqCounter.getValue("B"));
             
             // assert client cache for view
             view = phxConn.getTable(new PTableKey(phxConn.getTenantId(), fullViewName));
@@ -2358,9 +2380,10 @@ public class AlterTableIT extends BaseOwnClusterHBaseManagedTimeIT {
             assertNull("A view should always have the column qualifier counter as null", view.getEncodedCQCounter().getValue(DEFAULT_COLUMN_FAMILY));
             
             // assert that the server side metadata for the base table and the view is also updated correctly.
-            assertEncodedCQCounter(DEFAULT_COLUMN_FAMILY, schemaName, baseTableName, (ENCODED_CQ_COUNTER_INITIAL_VALUE + 10), true);
-            assertEncodedCQValue(DEFAULT_COLUMN_FAMILY, "COL10", schemaName, viewName, (ENCODED_CQ_COUNTER_INITIAL_VALUE + 8));
-            assertEncodedCQValue("A", "COL11", schemaName, viewName, ENCODED_CQ_COUNTER_INITIAL_VALUE + 9);
+            assertEncodedCQCounter(DEFAULT_COLUMN_FAMILY, schemaName, baseTableName, (ENCODED_CQ_COUNTER_INITIAL_VALUE + 5), true);
+            assertEncodedCQCounter("A", schemaName, baseTableName, (ENCODED_CQ_COUNTER_INITIAL_VALUE + 3), true);
+            assertEncodedCQValue(DEFAULT_COLUMN_FAMILY, "COL10", schemaName, viewName, (ENCODED_CQ_COUNTER_INITIAL_VALUE + 4));
+            assertEncodedCQValue("A", "COL11", schemaName, viewName, ENCODED_CQ_COUNTER_INITIAL_VALUE + 2);
             assertSequenceNumber(schemaName, baseTableName, initBaseTableSeqNumber + 4);
             assertSequenceNumber(schemaName, viewName, PTable.INITIAL_SEQ_NUM + 2);
         }

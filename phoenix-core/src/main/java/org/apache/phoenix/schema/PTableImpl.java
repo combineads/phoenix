@@ -110,7 +110,7 @@ public class PTableImpl implements PTable {
     private Map<byte[], PColumnFamily> familyByBytes;
     private Map<String, PColumnFamily> familyByString;
     private ListMultimap<String, PColumn> columnsByName;
-    private ListMultimap<Integer, PColumn> kvColumnsByEncodedColumnNames;
+    private ListMultimap<Pair<String, Integer>, PColumn> kvColumnsByEncodedColumnNames;
     private PName pkName;
     private Integer bucketNum;
     private RowKeySchema rowKeySchema;
@@ -427,7 +427,7 @@ public class PTableImpl implements PTable {
         PColumn[] allColumns;
         
         this.columnsByName = ArrayListMultimap.create(columns.size(), 1);
-        this.kvColumnsByEncodedColumnNames = (EncodedColumnsUtil.usesEncodedColumnNames(storageScheme) ? ArrayListMultimap.<Integer, PColumn>create(columns.size(), 1) : null);
+        this.kvColumnsByEncodedColumnNames = (EncodedColumnsUtil.usesEncodedColumnNames(storageScheme) ? ArrayListMultimap.<Pair<String, Integer>, PColumn>create(columns.size(), 1) : null);
         int numPKColumns = 0;
         if (bucketNum != null) {
             // Add salt column to allColumns and pkColumns, but don't add to
@@ -459,16 +459,20 @@ public class PTableImpl implements PTable {
                     }
                 }
             }
-            Integer cq = column.getEncodedColumnQualifier();
             //TODO: samarth understand the implication of this.
-            if (kvColumnsByEncodedColumnNames != null && cq != null) {
-                if (kvColumnsByEncodedColumnNames.put(cq, column)) {
-                    int count = 0;
-                    for (PColumn dupColumn : kvColumnsByEncodedColumnNames.get(cq)) {
-                        if (Objects.equal(familyName, dupColumn.getFamilyName())) {
-                            count++;
-                            if (count > 1) {
-                                throw new ColumnAlreadyExistsException(schemaName.getString(), name.getString(), columnName);
+            if (kvColumnsByEncodedColumnNames != null) {
+                Integer cq = column.getEncodedColumnQualifier();
+                String cf = column.getFamilyName() != null ? column.getFamilyName().getString() : null;
+                if (cf != null && cq != null) {
+                    Pair<String, Integer> pair = new Pair<>(cf, cq);
+                    if (kvColumnsByEncodedColumnNames.put(pair, column)) {
+                        int count = 0;
+                        for (PColumn dupColumn : kvColumnsByEncodedColumnNames.get(pair)) {
+                            if (Objects.equal(familyName, dupColumn.getFamilyName())) {
+                                count++;
+                                if (count > 1) {
+                                    throw new ColumnAlreadyExistsException(schemaName.getString(), name.getString(), columnName);
+                                }
                             }
                         }
                     }
@@ -740,31 +744,33 @@ public class PTableImpl implements PTable {
     }
     
     @Override
-    public PColumn getPColumnForColumnQualifier(byte[] cq) throws ColumnNotFoundException, AmbiguousColumnException {
+    public PColumn getPColumnForColumnQualifier(byte[] cf, byte[] cq) throws ColumnNotFoundException, AmbiguousColumnException {
         Preconditions.checkNotNull(cq);
-        if (!EncodedColumnsUtil.usesEncodedColumnNames(this)) {
+        if (!EncodedColumnsUtil.usesEncodedColumnNames(this) || cf == null) {
             String columnName = (String)PVarchar.INSTANCE.toObject(cq);
             return getPColumnForColumnName(columnName);
         } else {
             Integer qualifier = (Integer)PInteger.INSTANCE.toObject(cq);
-            List<PColumn> columns = kvColumnsByEncodedColumnNames.get(qualifier);
+            String family = (String)PVarchar.INSTANCE.toObject(cf);
+            List<PColumn> columns = kvColumnsByEncodedColumnNames.get(new Pair<>(family, qualifier));
             int size = columns.size();
             if (size == 0) {
                 //TODO: samarth should we have a column qualifier not found exception?
                 throw new ColumnNotFoundException(Bytes.toString(cq));
             }
-            if (size > 1) {
-                for (PColumn column : columns) {
-                    if (column.getFamilyName() == null || QueryConstants.DEFAULT_COLUMN_FAMILY.equals(column.getFamilyName().getString())) {
-                        // Allow ambiguity with PK column or column in the default column family,
-                        // since a PK column cannot be prefixed and a user would not know how to
-                        // prefix a column in the default column family.
-                        return column;
-                    }
-                }
-                //TODO: samarth should we have a column qualifier not found exception?
-                throw new AmbiguousColumnException(columns.get(0).getName().getString());
-            }
+            //TODO: samarth I am not convinced if need this logic.
+//            if (size > 1) {
+//                for (PColumn column : columns) {
+//                    if (QueryConstants.DEFAULT_COLUMN_FAMILY.equals(column.getFamilyName().getString())) {
+//                        // Allow ambiguity with PK column or column in the default column family,
+//                        // since a PK column cannot be prefixed and a user would not know how to
+//                        // prefix a column in the default column family.
+//                        return column;
+//                    }
+//                }
+//                //TODO: samarth should we have a column qualifier not found exception?
+//                throw new AmbiguousColumnException(columns.get(0).getName().getString());
+//            }
             return columns.get(0);
         }
     }
@@ -1224,7 +1230,7 @@ public class PTableImpl implements PTable {
         if (table.getEncodedCQCountersList() != null) {
             encodedColumnQualifierCounter = new EncodedCQCounter();
             for (org.apache.phoenix.coprocessor.generated.PTableProtos.EncodedCQCounter cqCounterFromProto : table.getEncodedCQCountersList()) {
-                encodedColumnQualifierCounter.increment(cqCounterFromProto.getColFamily());
+                encodedColumnQualifierCounter.setValue(cqCounterFromProto.getColFamily(), cqCounterFromProto.getCounter());
             }
         }
 

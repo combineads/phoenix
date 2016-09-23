@@ -89,10 +89,10 @@ import static org.apache.phoenix.jdbc.PhoenixDatabaseMetaData.VIEW_STATEMENT;
 import static org.apache.phoenix.jdbc.PhoenixDatabaseMetaData.VIEW_TYPE;
 import static org.apache.phoenix.query.QueryConstants.BASE_TABLE_BASE_COLUMN_COUNT;
 import static org.apache.phoenix.query.QueryConstants.DEFAULT_COLUMN_FAMILY;
-import static org.apache.phoenix.query.QueryConstants.ENCODED_CQ_COUNTER_INITIAL_VALUE;
 import static org.apache.phoenix.query.QueryServices.DROP_METADATA_ATTRIB;
 import static org.apache.phoenix.query.QueryServicesOptions.DEFAULT_DROP_METADATA;
 import static org.apache.phoenix.query.QueryServicesOptions.DEFAULT_RUN_UPDATE_STATS_ASYNC;
+import static org.apache.phoenix.schema.PTable.EncodedCQCounter.NULL_COUNTER;
 import static org.apache.phoenix.schema.PTable.ViewType.MAPPED;
 import static org.apache.phoenix.schema.PTableType.TABLE;
 import static org.apache.phoenix.schema.PTableType.VIEW;
@@ -231,8 +231,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.primitives.Ints;
-
-import static org.apache.phoenix.schema.PTable.EncodedCQCounter.NULL_COUNTER;
 
 public class MetaDataClient {
     private static final Logger logger = LoggerFactory.getLogger(MetaDataClient.class);
@@ -729,14 +727,9 @@ public class MetaDataClient {
             Set<ColumnReference> indexColRefs = indexMaintainer.getIndexedColumns();
             for (ColumnReference colRef : indexColRefs) {
                 try {
-                    byte[] cf= colRef.getFamily();
-                    byte[] cq= colRef.getQualifier();
-                    if (cf!=null) {
-                        view.getColumnFamily(cf).getPColumnForColumnQualifier(cq);
-                    }
-                    else {
-                        view.getPColumnForColumnQualifier(cq);
-                    }
+                    byte[] cf = colRef.getFamily();
+                    byte[] cq = colRef.getQualifier();
+                    view.getPColumnForColumnQualifier(cf, cq);
                 } catch (ColumnNotFoundException e) { // Ignore this index and continue with others
                     containsAllReqdCols = false;
                     break;
@@ -2035,7 +2028,7 @@ public class MetaDataClient {
                      * the same HTable. Views always use the base table's column qualifier counter for doling out
                      * encoded column qualifier.
                      */
-                    viewPhysicalTable = connection.getTable(new PTableKey(null, physicalNames.get(0).getString()));
+                    viewPhysicalTable = PhoenixRuntime.getTable(connection, physicalNames.get(0).getString());
                     storageScheme = viewPhysicalTable.getStorageScheme();
 					if (EncodedColumnsUtil.usesEncodedColumnNames(viewPhysicalTable)) {
                         cqCounter  = viewPhysicalTable.getEncodedCQCounter();
@@ -3130,11 +3123,8 @@ public class MetaDataClient {
                 List<PColumn> columns = Lists.newArrayListWithExpectedSize(numCols);
                 Set<String> colFamiliesForPColumnsToBeAdded = new LinkedHashSet<>();
                 Set<String> families = new LinkedHashSet<>();
-                //FIXME: samarth change this to fetch table from server if client cache doesn't have it. What about local indexes?
-                //FIXME: samarth fix this mess of getting table names from connection
-                PTable tableForCQCounters = tableType == PTableType.VIEW ? connection.getTable(new PTableKey(null, table.getPhysicalName().getString())) : table;;
+                PTable tableForCQCounters = tableType == PTableType.VIEW ? PhoenixRuntime.getTable(connection, table.getPhysicalName().getString()) : table;;
                 EncodedCQCounter cqCounterToUse = tableForCQCounters.getEncodedCQCounter();
-                StorageScheme storageScheme = table.getStorageScheme();
                 Map<String, Integer> changedCqCounters = new HashMap<>(numCols);
                 if (numCols > 0 ) {
                     //TODO: samarth should these be guarded by storage scheme check. Better to have the map always available. immutable empty for views and non encoded.

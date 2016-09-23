@@ -31,9 +31,6 @@ import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.phoenix.hbase.index.util.KeyValueBuilder;
 import org.apache.phoenix.index.IndexMaintainer;
 import org.apache.phoenix.jdbc.PhoenixConnection;
-import org.apache.phoenix.query.QueryConstants;
-
-import com.google.common.collect.ImmutableMap;
 
 
 /**
@@ -256,7 +253,7 @@ public interface PTable extends PMetaDataEntity {
      * @throws ColumnNotFoundException if no column with the given column qualifier can be found
      * @throws AmbiguousColumnException if multiple columns are found with the given column qualifier
      */
-    PColumn getPColumnForColumnQualifier(byte[] cq) throws ColumnNotFoundException, AmbiguousColumnException; 
+    PColumn getPColumnForColumnQualifier(byte[] cf, byte[] cq) throws ColumnNotFoundException, AmbiguousColumnException; 
     
     /**
      * Get the PK column with the given name.
@@ -435,6 +432,10 @@ public interface PTable extends PMetaDataEntity {
                 familyCounters.put(columnFamily, counter);
             }
             return counter;
+        }
+        
+        public void setValue(String columnFamily, Integer value) {
+            familyCounters.put(columnFamily, value);
         }
         
         /**

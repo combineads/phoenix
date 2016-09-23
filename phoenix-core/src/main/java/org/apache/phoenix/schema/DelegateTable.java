@@ -287,8 +287,8 @@ public class DelegateTable implements PTable {
     }
 
     @Override
-    public PColumn getPColumnForColumnQualifier(byte[] cq) throws ColumnNotFoundException, AmbiguousColumnException {
-        return delegate.getPColumnForColumnQualifier(cq);
+    public PColumn getPColumnForColumnQualifier(byte[] cf, byte[] cq) throws ColumnNotFoundException, AmbiguousColumnException {
+        return delegate.getPColumnForColumnQualifier(cf, cq);
     }
 
     @Override

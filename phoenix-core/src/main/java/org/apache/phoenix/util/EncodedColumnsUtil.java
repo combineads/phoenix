@@ -33,8 +33,8 @@ public class EncodedColumnsUtil {
         return usesEncodedColumnNames(table.getStorageScheme());
     }
     
-    public static boolean usesEncodedColumnNames(StorageScheme storageSchema) {
-        return storageSchema != null && storageSchema != StorageScheme.NON_ENCODED_COLUMN_NAMES;
+    public static boolean usesEncodedColumnNames(StorageScheme storageScheme) {
+        return storageScheme != null && storageScheme != StorageScheme.NON_ENCODED_COLUMN_NAMES;
     }
 
     public static byte[] getEncodedColumnQualifier(PColumn column) {
