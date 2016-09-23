@@ -915,7 +915,7 @@ public class ScanUtil {
     }
     
     public static boolean useQualifierAsIndex(Pair<Integer, Integer> minMaxQualifiers, boolean isJoin) {
-        return minMaxQualifiers != null && !isJoin;
+        return minMaxQualifiers != null;// && isJoin;
     }
     
     public static boolean setMinMaxQualifiersOnScan(PTable table) {

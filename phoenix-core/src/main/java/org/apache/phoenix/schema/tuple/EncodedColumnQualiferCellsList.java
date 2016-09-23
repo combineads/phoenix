@@ -32,9 +32,7 @@ import javax.annotation.concurrent.NotThreadSafe;
 
 import org.apache.hadoop.hbase.Cell;
 import org.apache.hadoop.hbase.KeyValue;
-import org.apache.hadoop.hbase.KeyValueUtil;
 import org.apache.hadoop.hbase.util.Bytes;
-import org.apache.phoenix.query.QueryConstants;
 import org.apache.phoenix.schema.PTable.StorageScheme;
 import org.apache.phoenix.schema.SortOrder;
 import org.apache.phoenix.schema.types.PInteger;
@@ -49,6 +47,8 @@ import org.apache.phoenix.schema.types.PInteger;
  * implements all the optional methods of the interface too.
  * 
  * For getting elements out o
+ * 
+ * TODO: samarth think about whether we should be using this list with other storage schemes
  */
 @NotThreadSafe
 public class EncodedColumnQualiferCellsList implements List<Cell> {

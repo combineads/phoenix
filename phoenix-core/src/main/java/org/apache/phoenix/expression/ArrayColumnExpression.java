@@ -30,6 +30,7 @@ import org.apache.phoenix.schema.tuple.Tuple;
 import org.apache.phoenix.schema.types.PArrayDataType;
 import org.apache.phoenix.schema.types.PVarbinary;
 import org.apache.phoenix.schema.types.PVarchar;
+import org.apache.phoenix.util.EncodedColumnsUtil;
 
 /**
  * 
@@ -57,10 +58,11 @@ public class ArrayColumnExpression extends ColumnExpression {
     
     public ArrayColumnExpression(PColumn column, String displayName, boolean encodedColumnName) {
         super(column);
-        // array indexes are 1-based
-        this.index = column.getEncodedColumnQualifier()+1;
+        // array indexes are 1-based TODO: samarth think about the case when the encodedcolumn qualifier is null. Probably best to add a check here for encodedcolumnname to be true
+        this.index = column.getEncodedColumnQualifier() + 1;
         byte[] cf = column.getFamilyName().getBytes();
-        this.arrayExpression = new KeyValueColumnExpression(column, cf, cf);
+        byte[] cq = EncodedColumnsUtil.getEncodedColumnQualifier(column);
+        this.arrayExpression = new KeyValueColumnExpression(column, cf, cq);
         this.origKVExpression = new KeyValueColumnExpression(column, displayName, encodedColumnName);
         this.displayName = displayName;
     }

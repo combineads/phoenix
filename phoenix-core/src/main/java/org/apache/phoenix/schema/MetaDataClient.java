@@ -2052,8 +2052,8 @@ public class MetaDataClient {
                  * in the client cache. If the phoenix table already doesn't exist then the non-encoded column qualifier scheme works
                  * because we cannot control the column qualifiers that were used when populating the hbase table.
                  */
-                //TODO: samarth these checks need to be changed for local indexes. Hate having all of these special cases for local indexes.
-                // It is making the code unmaintainable.
+                //TODO: samarth these checks for whether table exists need to be changed for local indexes. Hate having all of these special cases for local indexes.
+                // It is making the code unmaintainable. For local indexes, the physical table already exists.
                 byte[] tableNameBytes = SchemaUtil.getTableNameAsBytes(schemaName, tableName);
                 boolean tableExists = true;
                 try (HBaseAdmin admin = connection.getQueryServices().getAdmin()) {
@@ -2072,7 +2072,6 @@ public class MetaDataClient {
                 } else if (tableExists) {
                     storageScheme = StorageScheme.NON_ENCODED_COLUMN_NAMES;
                 } else if (isImmutableRows) {
-//                    storageScheme = StorageScheme.NON_ENCODED_COLUMN_NAMES;
                     storageScheme = StorageScheme.COLUMNS_STORED_IN_SINGLE_CELL;
                     // since we are storing all columns of a column family in a single key value we can't use deletes to store nulls
                     storeNulls = true;
@@ -2147,14 +2146,14 @@ public class MetaDataClient {
                 }
             }
             
-            if (storageScheme == StorageScheme.ENCODED_COLUMN_NAMES) {
+            if (EncodedColumnsUtil.usesEncodedColumnNames(storageScheme)) {
                 // Store the encoded column counter for phoenix entities that have their own hbase
                 // tables i.e. base tables and indexes.
                 String schemaNameToUse = tableType == VIEW ? viewPhysicalTable.getSchemaName().getString() : schemaName;
                 String tableNameToUse = tableType == VIEW ? viewPhysicalTable.getTableName().getString() : tableName;
+                boolean sharedIndex = tableType == PTableType.INDEX && (indexType == IndexType.LOCAL || parent.getType() == PTableType.VIEW);
                 // For local indexes and indexes on views, pass on the the tenant id since all their meta-data rows have
                 // tenant ids in there.
-                boolean sharedIndex = tableType == PTableType.INDEX && (indexType == IndexType.LOCAL || parent.getType() == PTableType.VIEW);
                 String tenantIdToUse = connection.getTenantId() != null && sharedIndex ? connection.getTenantId().getString() : null;
                 // When a view adds its own columns, then we need to increase the sequence number of the base table
                 // too since we want clients to get the latest PTable of the base table.

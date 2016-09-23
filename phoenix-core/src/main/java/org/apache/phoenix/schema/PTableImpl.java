@@ -1226,7 +1226,7 @@ public class PTableImpl implements PTable {
         if (table.hasStorageScheme()) {
             storageScheme = StorageScheme.fromSerializedValue(table.getStorageScheme().toByteArray()[0]);
         }
-        EncodedCQCounter encodedColumnQualifierCounter = storageScheme == StorageScheme.ENCODED_COLUMN_NAMES ? new EncodedCQCounter() : EncodedCQCounter.NULL_COUNTER;
+        EncodedCQCounter encodedColumnQualifierCounter = EncodedColumnsUtil.usesEncodedColumnNames(storageScheme) ? new EncodedCQCounter() : EncodedCQCounter.NULL_COUNTER;
         if (table.getEncodedCQCountersList() != null) {
             encodedColumnQualifierCounter = new EncodedCQCounter();
             for (org.apache.phoenix.coprocessor.generated.PTableProtos.EncodedCQCounter cqCounterFromProto : table.getEncodedCQCountersList()) {

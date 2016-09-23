@@ -26,7 +26,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.phoenix.parse.AliasedNode;
 import org.apache.phoenix.parse.ColumnParseNode;
 import org.apache.phoenix.parse.FamilyWildcardParseNode;
@@ -168,8 +167,6 @@ public class TupleProjectionCompiler {
         boolean hasSaltingColumn = retainPKColumns && table.getBucketNum() != null;
         List<PColumn> projectedColumns = new ArrayList<PColumn>();
         int position = hasSaltingColumn ? 1 : 0;
-        EncodedCQCounter cqCounter = null;
-        String valueColFamilyName = Bytes.toString(VALUE_COLUMN_FAMILY);
         for (int i = position; i < sourceColumnRefs.size(); i++) {
             ColumnRef sourceColumnRef = sourceColumnRefs.get(i);
             PColumn sourceColumn = sourceColumnRef.getColumn();
@@ -182,18 +179,12 @@ public class TupleProjectionCompiler {
                     retainPKColumns && SchemaUtil.isPKColumn(sourceColumn) ? 
                             null : PNameFactory.newName(VALUE_COLUMN_FAMILY), 
                     position++, sourceColumn.isNullable(), sourceColumnRef);
-            if (EncodedColumnsUtil.hasEncodedColumnName(sourceColumn)) {
-                if (cqCounter == null) {
-                    cqCounter = new EncodedCQCounter();
-                } else {
-                    cqCounter.increment(valueColFamilyName);
-                }
-            }
             projectedColumns.add(column);
         }
-        StorageScheme storageScheme = StorageScheme.NON_ENCODED_COLUMN_NAMES;
-        if (cqCounter != null) {
-            storageScheme = StorageScheme.ENCODED_COLUMN_NAMES;
+        StorageScheme storageScheme = table.getStorageScheme();
+        EncodedCQCounter cqCounter = EncodedCQCounter.NULL_COUNTER;
+        if (storageScheme != StorageScheme.NON_ENCODED_COLUMN_NAMES) {
+            cqCounter = EncodedCQCounter.copy(table.getEncodedCQCounter());
         }
         return PTableImpl.makePTable(table.getTenantId(), PROJECTED_TABLE_SCHEMA, table.getName(), PTableType.PROJECTED,
                 null, table.getTimeStamp(), table.getSequenceNumber(), table.getPKName(),
