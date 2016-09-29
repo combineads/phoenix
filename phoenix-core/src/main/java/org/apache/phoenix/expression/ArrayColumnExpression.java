@@ -62,7 +62,7 @@ public class ArrayColumnExpression extends ColumnExpression {
         this.index = column.getEncodedColumnQualifier() + 1;
         byte[] cf = column.getFamilyName().getBytes();
         byte[] cq = EncodedColumnsUtil.getEncodedColumnQualifier(column);
-        this.arrayExpression = new KeyValueColumnExpression(column, cf, cq);
+        this.arrayExpression = new KeyValueColumnExpression(column, cf, cf);
         this.origKVExpression = new KeyValueColumnExpression(column, displayName, encodedColumnName);
         this.displayName = displayName;
     }

@@ -842,7 +842,7 @@ public class PTableImpl implements PTable {
                         for (PColumn column : columns) {
                             maxEncodedColumnQualifier = Math.max(maxEncodedColumnQualifier, column.getEncodedColumnQualifier());
                         }
-                        byte[][] colValues = new byte[maxEncodedColumnQualifier+1][];
+                        byte[][] colValues = new byte[maxEncodedColumnQualifier+1][]; //TODO: samarth probably use the min_qualifier as an offset here.
                         for (PColumn column : columns) {
                             colValues[column.getEncodedColumnQualifier()] = columnToValueMap.get(column);
                         }

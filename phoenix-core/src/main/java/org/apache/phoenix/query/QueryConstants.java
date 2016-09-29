@@ -383,5 +383,8 @@ public interface QueryConstants {
     public static final byte[] OFFSET_FAMILY = "f_offset".getBytes();
     public static final byte[] OFFSET_COLUMN = "c_offset".getBytes();
     public static final String LAST_SCAN = "LAST_SCAN";
+    //TODO: samarth we may or may not have to tweak this constant for short/long/int column qualifer schemes.
+    //Qualifier used for the cell that stores various column values using the storage scheme StorageScheme#COLUMNS_STORED_IN_SINGLE_CELL
+    //public static final ImmutableBytesPtr SINGLE_CELL_COLUMN_QUALIFIER = new ImmutableBytesPtr(PInteger.INSTANCE.toBytes(ENCODED_CQ_COUNTER_INITIAL_VALUE)); 
 
 }

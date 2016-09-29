@@ -76,7 +76,6 @@ import org.apache.phoenix.schema.PColumn;
 import org.apache.phoenix.schema.PColumnFamily;
 import org.apache.phoenix.schema.PDatum;
 import org.apache.phoenix.schema.PIndexState;
-import org.apache.phoenix.schema.PName;
 import org.apache.phoenix.schema.PTable;
 import org.apache.phoenix.schema.PTable.IndexType;
 import org.apache.phoenix.schema.PTable.StorageScheme;
@@ -99,14 +98,13 @@ import org.apache.phoenix.util.IndexUtil;
 import org.apache.phoenix.util.MetaDataUtil;
 import org.apache.phoenix.util.SchemaUtil;
 import org.apache.phoenix.util.TrustedByteArrayOutputStream;
+import org.apache.tephra.TxConstants;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-
-import org.apache.tephra.TxConstants;
 
 /**
  * 
@@ -1329,7 +1327,7 @@ public class IndexMaintainer implements Writable, Iterable<ColumnReference> {
                 }
                 @Override
                 public Void visit(ArrayColumnExpression expression) {
-					KeyValueColumnExpression colExpression = expression.getArrayExpression();
+					KeyValueColumnExpression colExpression = expression.getKeyValueExpression();
 					if (indexedColumns.add(new ColumnReference(colExpression.getColumnFamily(), colExpression.getColumnQualifier()))) {
                 		indexedColumnTypes.add(colExpression.getDataType());
                 	}
