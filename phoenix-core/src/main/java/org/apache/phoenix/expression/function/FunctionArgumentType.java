@@ -27,7 +27,7 @@ public enum FunctionArgumentType {
     TEMPORAL {
         @Override
         public Format getFormatter(String format) {
-            return DateUtil.getDateFormatter(format);
+            return DateUtil.getDateFormatter(format, DateUtil.DEFAULT_TIME_ZONE_ID);
         }
     }, 
     NUMERIC {

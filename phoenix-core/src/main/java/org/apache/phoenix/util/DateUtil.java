@@ -162,23 +162,26 @@ public class DateUtil {
     public static DateTimeParser getDateTimeParser(String pattern, PDataType pDataType) {
         return getDateTimeParser(pattern, pDataType, null);
     }
-
-    public static Format getDateFormatter(String pattern) {
+    
+    public static Format getDateFormatter(String pattern, String timeZoneId) {
+        TimeZone timeZone = getTimeZone(timeZoneId);
         return DateUtil.DEFAULT_DATE_FORMAT.equals(pattern)
                 ? DateUtil.DEFAULT_DATE_FORMATTER
-                : FastDateFormat.getInstance(pattern, DateUtil.DEFAULT_TIME_ZONE);
+                : FastDateFormat.getInstance(pattern, timeZone);
     }
 
-    public static Format getTimeFormatter(String pattern) {
+    public static Format getTimeFormatter(String pattern, String timeZoneId) {
+        TimeZone timeZone = getTimeZone(timeZoneId);
         return DateUtil.DEFAULT_TIME_FORMAT.equals(pattern)
                 ? DateUtil.DEFAULT_TIME_FORMATTER
-                : FastDateFormat.getInstance(pattern, DateUtil.DEFAULT_TIME_ZONE);
+                : FastDateFormat.getInstance(pattern, timeZone);
     }
 
-    public static Format getTimestampFormatter(String pattern) {
+    public static Format getTimestampFormatter(String pattern, String timeZoneId) {
+        TimeZone timeZone = getTimeZone(timeZoneId);
         return DateUtil.DEFAULT_TIMESTAMP_FORMAT.equals(pattern)
                 ? DateUtil.DEFAULT_TIMESTAMP_FORMATTER
-                : FastDateFormat.getInstance(pattern, DateUtil.DEFAULT_TIME_ZONE);
+                : FastDateFormat.getInstance(pattern, timeZone);
     }
 
     private static long parseDateTime(String dateTimeValue) {

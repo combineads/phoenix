@@ -289,7 +289,7 @@ public class DateTimeIT extends ParallelStatsDisabledIT {
 
     @Test
     public void selectBetweenDates() throws Exception {
-        Format formatter = DateUtil.getDateFormatter("yyyy-MM-dd");
+        Format formatter = DateUtil.getDateFormatter("yyyy-MM-dd", DateUtil.DEFAULT_TIME_ZONE_ID);
         Calendar cal = Calendar.getInstance();
         cal.setTime(date);
         java.util.Date dateToday = cal.getTime();
@@ -375,7 +375,7 @@ public class DateTimeIT extends ParallelStatsDisabledIT {
 
     @Test
     public void testDateBetweenLiterals() throws Exception {
-        Format formatter = DateUtil.getDateFormatter("yyyy-MM-dd");
+        Format formatter = DateUtil.getDateFormatter("yyyy-MM-dd", DateUtil.DEFAULT_TIME_ZONE_ID);
         Calendar cal = Calendar.getInstance();
         cal.setTime(date);
         java.util.Date dateToday = cal.getTime();

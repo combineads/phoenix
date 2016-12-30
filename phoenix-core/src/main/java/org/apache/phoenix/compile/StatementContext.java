@@ -117,12 +117,13 @@ public class StatementContext {
         this.expressions = new ExpressionManager();
         PhoenixConnection connection = statement.getConnection();
         ReadOnlyProps props = connection.getQueryServices().getProps();
+        String timeZoneId = props.get(QueryServices.DATE_FORMAT_TIMEZONE_ATTRIB, DateUtil.DEFAULT_TIME_ZONE_ID);
         this.dateFormat = props.get(QueryServices.DATE_FORMAT_ATTRIB, DateUtil.DEFAULT_DATE_FORMAT);
-        this.dateFormatter = DateUtil.getDateFormatter(dateFormat);
+        this.dateFormatter = DateUtil.getDateFormatter(dateFormat, timeZoneId);
         this.timeFormat = props.get(QueryServices.TIME_FORMAT_ATTRIB, DateUtil.DEFAULT_TIME_FORMAT);
-        this.timeFormatter = DateUtil.getTimeFormatter(timeFormat);
+        this.timeFormatter = DateUtil.getTimeFormatter(timeFormat, timeZoneId);
         this.timestampFormat = props.get(QueryServices.TIMESTAMP_FORMAT_ATTRIB, DateUtil.DEFAULT_TIMESTAMP_FORMAT);
-        this.timestampFormatter = DateUtil.getTimestampFormatter(timestampFormat);
+        this.timestampFormatter = DateUtil.getTimestampFormatter(timestampFormat, timeZoneId);
         this.dateFormatTimeZone = DateUtil.getTimeZone(props.get(QueryServices.DATE_FORMAT_TIMEZONE_ATTRIB,
                 DateUtil.DEFAULT_TIME_ZONE_ID));
         this.numberFormat = props.get(QueryServices.NUMBER_FORMAT_ATTRIB, NumberUtil.DEFAULT_NUMBER_FORMAT);

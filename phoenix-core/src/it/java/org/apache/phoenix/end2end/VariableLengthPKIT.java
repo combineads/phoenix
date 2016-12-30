@@ -834,7 +834,7 @@ public class VariableLengthPKIT extends BaseClientManagedTimeIT {
         initPtsdbTableValues(ts);
 
         String format = "HH:mm:ss";
-        Format dateFormatter = DateUtil.getDateFormatter(format);
+        Format dateFormatter = DateUtil.getDateFormatter(format, DateUtil.DEFAULT_TIME_ZONE_ID);
         String query = "SELECT HOST,TO_CHAR(\"DATE\",'" + format + "') FROM PTSDB WHERE INST='x' AND HOST='y'";
         String url = getUrl() + ";" + PhoenixRuntime.CURRENT_SCN_ATTRIB + "=" + (ts + 5); // Run query at timestamp 5
         Properties props = PropertiesUtil.deepCopy(TEST_PROPERTIES);
@@ -855,7 +855,7 @@ public class VariableLengthPKIT extends BaseClientManagedTimeIT {
         initPtsdbTableValues(ts);
 
         String format = "yyyy-MM-dd HH:mm:ss.S";
-        Format dateFormatter = DateUtil.getDateFormatter(format);
+        Format dateFormatter = DateUtil.getDateFormatter(format, DateUtil.DEFAULT_TIME_ZONE_ID);
         String query = "SELECT HOST,TO_CHAR(\"DATE\",'" + format + "') FROM PTSDB WHERE INST='x' AND HOST='y' and \"DATE\"=TO_DATE(?,'" + format + "')";
         String url = getUrl() + ";" + PhoenixRuntime.CURRENT_SCN_ATTRIB + "=" + (ts + 5); // Run query at timestamp 5
         Properties props = PropertiesUtil.deepCopy(TEST_PROPERTIES);
