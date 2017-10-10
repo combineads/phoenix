@@ -297,4 +297,24 @@ public class DelegateHTable implements HTableInterface {
 		return delegate.checkAndDelete(row, family, qualifier, compareOp, value, delete);
 	}
 
+    @Override
+    public void setOperationTimeout(int operationTimeout) {
+        delegate.setOperationTimeout(operationTimeout);
+    }
+
+    @Override
+    public int getOperationTimeout() {
+        return delegate.getOperationTimeout();
+    }
+
+    @Override
+    public void setRpcTimeout(int rpcTimeout) {
+        delegate.setRpcTimeout(rpcTimeout);
+    }
+
+    @Override
+    public int getRpcTimeout() {
+        return delegate.getRpcTimeout();
+    }
+
 }
