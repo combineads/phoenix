@@ -583,7 +583,7 @@ public class MutationState implements SQLCloseable {
                      IndexMaintainer.nonDisabledIndexIterator(table.getIndexes().iterator()) :
                          table.isImmutableRows() ?
                             IndexMaintainer.enabledGlobalIndexIterator(table.getIndexes().iterator()) :
-                                Iterators.<PTable>emptyIterator();
+                                Collections.<PTable>emptyIterator();
         final List<Mutation> mutationList = Lists.newArrayListWithExpectedSize(values.size());
         final List<Mutation> mutationsPertainingToIndex = indexes.hasNext() ? Lists.<Mutation>newArrayListWithExpectedSize(values.size()) : null;
         generateMutations(tableRef, timestamp, values, mutationList, mutationsPertainingToIndex);
@@ -723,7 +723,7 @@ public class MutationState implements SQLCloseable {
     public Iterator<Pair<byte[],List<Mutation>>> toMutations(final boolean includeMutableIndexes, final Long tableTimestamp) {
         final Iterator<Map.Entry<TableRef, Map<ImmutableBytesPtr,RowMutationState>>> iterator = this.mutations.entrySet().iterator();
         if (!iterator.hasNext()) {
-            return Iterators.emptyIterator();
+            return Collections.emptyIterator();
         }
         Long scn = connection.getSCN();
         final long timestamp = getMutationTimestamp(tableTimestamp, scn);
