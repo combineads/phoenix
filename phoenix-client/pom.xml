@@ -129,6 +129,7 @@
                 <excludes>
                   <exclude>org.apache.phoenix:phoenix-client</exclude>
                   <exclude>xom:xom</exclude>
+                  <exclude>com.sun.jersey:jersey-server</exclude>
                 </excludes>
               </artifactSet>
               <filters>
@@ -347,6 +348,20 @@
                 <relocation>
                   <pattern>junit</pattern>
                   <shadedPattern>${shaded.package}.junit</shadedPattern>
+                </relocation>
+
+                <!-- Phoenix relocations -->
+                <relocation>
+                  <pattern>com.google</pattern>
+                  <shadedPattern>${shaded.package}.com.google</shadedPattern>
+                </relocation>
+                <relocation>
+                  <pattern>javax.ws.rs</pattern>
+                  <shadedPattern>${shaded.package}.javax.ws.rs</shadedPattern>
+                </relocation>
+                <relocation>
+                  <pattern>javax.servlet</pattern>
+                  <shadedPattern>${shaded.package}.javax.servlet</shadedPattern>
                 </relocation>
               </relocations>
             </configuration>
