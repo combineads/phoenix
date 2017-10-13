@@ -157,29 +157,4 @@ public class UseSchemaIT extends ParallelStatsDisabledIT {
         conn.close();
     }
 
-    @Test
-    public void testMappedView() throws Exception {
-        Properties props = new Properties();
-        String schema = generateUniqueName();
-        String tableName = generateUniqueName();
-        String fullTablename = schema + QueryConstants.NAME_SEPARATOR + tableName;
-        props.setProperty(QueryServices.SCHEMA_ATTRIB, schema);
-        Connection conn = DriverManager.getConnection(getUrl(), props);
-        HBaseAdmin admin = driver.getConnectionQueryServices(getUrl(), TestUtil.TEST_PROPERTIES).getAdmin();
-        admin.createNamespace(NamespaceDescriptor.create(schema).build());
-        admin.createTable(new HTableDescriptor(fullTablename)
-                .addFamily(new HColumnDescriptor(QueryConstants.DEFAULT_COLUMN_FAMILY_BYTES)));
-        Put put = new Put(PVarchar.INSTANCE.toBytes(fullTablename));
-        put.addColumn(QueryConstants.DEFAULT_COLUMN_FAMILY_BYTES, QueryConstants.EMPTY_COLUMN_BYTES,
-                QueryConstants.EMPTY_COLUMN_VALUE_BYTES);
-        HTable phoenixSchematable = new HTable(admin.getConfiguration(), fullTablename);
-        phoenixSchematable.put(put);
-        phoenixSchematable.close();
-        conn.createStatement().execute("CREATE VIEW " + tableName + " (tablename VARCHAR PRIMARY KEY)");
-        ResultSet rs = conn.createStatement().executeQuery("select tablename from " + tableName);
-        assertTrue(rs.next());
-        assertEquals(fullTablename, rs.getString(1));
-        admin.close();
-        conn.close();
-    }
 }
